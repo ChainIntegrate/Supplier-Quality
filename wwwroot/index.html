@@ -1,0 +1,1155 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>ChainIntegrate — Supplier Quality (LAN)</title>
+  <meta name="description" content="Ufficio Qualità — Gestione fornitori e valutazioni (solo LAN, file JSON)." />
+
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="theme-color" content="#2ea7d6" />
+  <link rel="icon" href="/favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg-alt: #ffffff;
+      --text: #0a0e14;
+      --muted: #546576;
+      --accent: #2ea7d6;
+      --accent-soft: #e3f4fb;
+      --border: #dde3ee;
+      --shadow-soft: 0 18px 45px rgba(10, 14, 20, 0.08);
+      --radius-lg: 18px;
+      --radius-full: 999px;
+      --max-width: 1120px;
+      --ok: #2ecc71;
+      --warn: #f39c12;
+      --err: #e74c3c;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:'Montserrat',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      background: radial-gradient(circle at top, rgba(46,167,214,0.08), var(--bg) 55%);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+    }
+    main{ padding:24px 16px 64px; }
+    .page{ max-width:var(--max-width); margin:0 auto; }
+
+    header{
+      position:sticky; top:0; z-index:20;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(to bottom, rgba(245,247,251,0.96), rgba(245,247,251,0.88));
+      border-bottom: 1px solid rgba(221,227,238,0.8);
+      padding: 16px 32px;
+    }
+    .header-inner{
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 10px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+    }
+    .brand{ display:flex; gap:12px; align-items:center; }
+    .brand-logo{ display:none; }
+    .brand-text{ display:flex; flex-direction:column; gap:2px; }
+    .brand-name{ font-weight:700; font-size:1.05rem; letter-spacing:0.04em; }
+    .brand-tagline{ font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.16em; }
+    nav{ display:flex; align-items:center; gap:10px; }
+
+    .pill{
+      font-size:0.74rem;
+      padding:6px 10px;
+      border-radius: var(--radius-full);
+      background: rgba(46,167,214,0.08);
+      color: var(--accent);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid rgba(221,227,238,0.8);
+      white-space:nowrap;
+    }
+    .dot{ width:8px; height:8px; border-radius:50%; background:var(--warn); }
+    .dot.ok{ background:var(--ok); }
+    .dot.err{ background:var(--err); }
+
+    .btn{
+      border:none; cursor:pointer;
+      border-radius: var(--radius-full);
+      padding: 10px 16px;
+      font-weight: 700;
+      font-size: 0.86rem;
+      display:inline-flex; align-items:center; gap:8px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      white-space:nowrap;
+    }
+    .btn.primary{
+      background: var(--accent);
+      color:#fff;
+      box-shadow: 0 14px 30px rgba(46,167,214,0.45);
+    }
+    .btn.primary:hover{ transform: translateY(-1px); background:#2790b8; box-shadow:0 18px 40px rgba(46,167,214,0.55); }
+    .btn.secondary{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.9);
+      color: var(--muted);
+    }
+    .btn.secondary:hover{ transform: translateY(-1px); border-color: var(--accent); background:#fff; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: minmax(0,1.15fr) minmax(0,0.85fr);
+      gap:14px;
+      margin-top:18px;
+      align-items:start;
+    }
+    .card{
+      background: var(--bg-alt);
+      border-radius: 16px;
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(221,227,238,0.9);
+      box-shadow: 0 10px 26px rgba(10,14,20,0.06);
+    }
+    .card h2{
+      margin:0 0 8px;
+      font-size:1.05rem;
+      letter-spacing:-0.01em;
+    }
+    .sub{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:0.9rem;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap:10px;
+    }
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+    label{ font-size:0.78rem; color:var(--muted); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; }
+    input, select, textarea{
+      width:100%;
+      border-radius: 14px;
+      border: 1px solid rgba(221,227,238,0.95);
+      background:#fff;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      outline:none;
+    }
+    textarea{ min-height: 84px; resize: vertical; }
+    input:focus, select:focus, textarea:focus{ border-color: var(--accent); box-shadow: 0 0 0 4px rgba(46,167,214,0.12); }
+
+    .mini{
+      font-size:0.82rem;
+      color:var(--muted);
+      margin-top:8px;
+      border-top:1px dashed var(--border);
+      padding-top:10px;
+    }
+    .mono{
+      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      overflow-wrap:anywhere;
+      font-size:0.84rem;
+      background:#f7f9fe;
+      border:1px solid rgba(221,227,238,0.95);
+      border-radius:14px;
+      padding:10px 12px;
+    }
+
+    .status{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(221,227,238,0.95);
+      background:#fff;
+      color:var(--muted);
+      font-size:0.88rem;
+    }
+    .status.ok{ border-color: rgba(46,204,113,0.35); background: rgba(46,204,113,0.06); color:#1f6e3d; }
+    .status.warn{ border-color: rgba(243,156,18,0.35); background: rgba(243,156,18,0.06); color:#7a4a07; }
+    .status.err{ border-color: rgba(231,76,60,0.35); background: rgba(231,76,60,0.06); color:#7b1f16; }
+
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      border:1px solid rgba(221,227,238,0.95);
+      border-radius:14px;
+      overflow:hidden;
+      font-size:0.9rem;
+    }
+    .table th, .table td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(221,227,238,0.95);
+      vertical-align:top;
+    }
+    .table th{
+      background:#f7f9fe;
+      color:var(--muted);
+      font-size:0.74rem;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      text-align:left;
+    }
+    .table tr:last-child td{ border-bottom:none; }
+
+    .actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+
+    .delta{ font-weight: 800; white-space: nowrap; }
+    .delta.up{ color: var(--ok); }
+    .delta.down{ color: var(--err); }
+    .delta.flat{ color: var(--muted); opacity: 0.95; }
+    .delta .sym{ font-weight: 900; margin-right: 6px; }
+
+    .chline{
+      display:flex;
+      gap:10px;
+      align-items:baseline;
+      flex-wrap:wrap;
+    }
+    .chline .lbl{
+      min-width: 140px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .chline .val{
+      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+    }
+
+    .footer-release{
+      position: fixed;
+      bottom: 10px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .release-pill{
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(221,227,238,0.9);
+      color: var(--muted);
+      box-shadow: 0 6px 18px rgba(10,14,20,0.08);
+      backdrop-filter: blur(6px);
+    }
+
+    @media (max-width: 980px){
+      header{ position:static; padding: 14px 12px; }
+      .header-inner{ justify-content:center; }
+      nav{ display:none; }
+      .grid{ grid-template-columns: minmax(0,1fr); }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-text">
+        <div class="brand-name">Supplier Quality — Ufficio Qualità</div>
+        <div class="brand-tagline">Solo LAN • Archiviazione JSON</div>
+      </div>
+    </div>
+
+    <nav>
+      <div class="pill" id="pillSession"><span class="dot" id="dotSession"></span><span id="txtSession">Server: …</span></div>
+      <div class="pill" id="pillWallet"><span class="dot ok" id="dotWallet"></span><span id="txtWallet">Archivio: data/*.json</span></div>
+      <button class="btn secondary" id="btnRefresh" type="button">Aggiorna</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="page">
+    <div class="grid">
+
+      <!-- LEFT: Supplier CRUD -->
+      <div class="card">
+        <h2>Gestione Fornitore</h2>
+        <p class="sub">
+          In questa versione il fornitore è un record in <strong>data/suppliers.json</strong>.
+          Le valutazioni sono in <strong>data/evaluations.json</strong>.
+        </p>
+
+        <div class="row">
+          <div class="field">
+            <label>Fornitore (lista)</label>
+            <select id="selSupplier"></select>
+          </div>
+          <div class="field">
+            <label>ID Fornitore</label>
+            <input id="inSupplierId" placeholder="(auto) — viene valorizzato quando selezioni/crei" disabled />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Nome fornitore</label>
+            <input id="inSupplierName" placeholder="Nome fornitore" />
+          </div>
+          <div class="field">
+            <label>Riferimento (opzionale)</label>
+            <input id="inSupplierRef" placeholder="Codice/Ref interno (opzionale)" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Note (opzionale)</label>
+          <textarea id="inSupplierNotes" placeholder="Note interne…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn secondary" id="btnNew" type="button">Nuovo</button>
+          <button class="btn secondary" id="btnSaveSupplier" type="button">Salva fornitore</button>
+          <button class="btn primary" id="btnSelectForVerify" type="button" disabled>Seleziona per Verifica</button>
+        </div>
+
+        <div class="status" id="statusSupplier">Pronta.</div>
+
+        <div class="mini">
+          Salvataggio atomico via API. Nessun dato resta solo nel browser.
+        </div>
+      </div>
+
+      <!-- RIGHT: VERIFY -->
+      <div class="card">
+        <h2>Verifica</h2>
+        <p class="sub">Seleziona un fornitore e carica lo storico valutazioni dal file.</p>
+
+        <div class="field">
+          <label>Seleziona fornitore</label>
+          <select id="selVerify">
+            <option value="">Carica fornitori per vedere la lista…</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn secondary" id="btnLoadSupplierList" type="button">Carica fornitori</button>
+          <button class="btn primary" id="btnVerify" type="button" disabled>Carica valutazioni</button>
+        </div>
+
+        <div class="status" id="statusVerify">In attesa.</div>
+
+        <div class="mini" style="margin-top:12px;">
+          <div style="font-weight:800; margin-bottom:6px;">Esito (UI)</div>
+          <div class="mono" id="outUiMatch">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <section style="margin-top:14px;">
+      <div class="card">
+        <h2>Dettaglio</h2>
+        <p class="sub">Identità fornitore, statistiche e lista valutazioni (una per periodo).</p>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:220px;">Campo</th>
+              <th>Valore</th>
+            </tr>
+          </thead>
+          <tbody id="tblChain">
+            <tr><td>—</td><td>—</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mini" style="margin-top:12px;">
+          <div style="font-weight:800; margin-bottom:6px;">Valutazioni</div>
+          <div id="outEvaluations">—</div>
+        </div>
+
+        <div class="mini" style="margin-top:12px;">
+          <div style="font-weight:800; margin-bottom:6px;">Cambiamenti (per periodo)</div>
+          <div id="outChanges">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADD / EDIT EVALUATION -->
+    <section style="margin-top:14px;">
+      <div class="card">
+        <h2>Valutazione</h2>
+        <p class="sub">
+          Inserisce una valutazione per <strong>periodo</strong> in <code>data/evaluations.json</code>.
+          Se il periodo esiste già, non viene creata: usa <strong>Correggi</strong>.
+        </p>
+
+        <div class="mini" id="evalModeBox" style="display:none; margin-bottom:10px;">
+          <div style="font-weight:900; margin-bottom:6px;">Modalità</div>
+          <div class="mono" id="evalModeText">—</div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Fornitore (selezionato)</label>
+            <select id="selEvalSupplier">
+              <option value="">Seleziona un fornitore…</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Periodo (es. 20261 / 20262)</label>
+            <input id="inEvalPeriod" placeholder="20261" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Puntualità</label>
+            <select id="inEvalPunctuality">
+              <option value="0">0 — N/D</option>
+              <option value="1">1 — Critico</option>
+              <option value="2" selected>2 — Sufficiente</option>
+              <option value="3">3 — Buono</option>
+              <option value="4">4 — Eccellente</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Qualità</label>
+            <select id="inEvalQuality">
+              <option value="0">0 — N/D</option>
+              <option value="1">1 — Critico</option>
+              <option value="2" selected>2 — Sufficiente</option>
+              <option value="3">3 — Buono</option>
+              <option value="4">4 — Eccellente</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Documentazione</label>
+            <select id="inEvalDocumentation">
+              <option value="0">0 — N/D</option>
+              <option value="1">1 — Critico</option>
+              <option value="2" selected>2 — Sufficiente</option>
+              <option value="3">3 — Buono</option>
+              <option value="4">4 — Eccellente</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Reattività</label>
+            <select id="inEvalReactivity">
+              <option value="0">0 — N/D</option>
+              <option value="1">1 — Critico</option>
+              <option value="2" selected>2 — Sufficiente</option>
+              <option value="3">3 — Buono</option>
+              <option value="4">4 — Eccellente</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Note</label>
+          <textarea id="inEvalNote" placeholder="Nota opzionale…"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="btnAddEvaluation" type="button" disabled>Invia valutazione</button>
+          <button class="btn secondary" id="btnEvalReset" type="button" disabled>Annulla</button>
+        </div>
+
+        <div class="status" id="statusEval">In attesa.</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+/* =========================
+   PESI GLOBALI (somma 100)
+   ========================= */
+const OVERALL_WEIGHTS = {
+  punctuality: 25,
+  quality: 25,
+  documentation: 25,
+  reactivity: 25
+};
+
+/* =========================
+   CONFIG
+   ========================= */
+const API_BASE = "";
+
+/* =========================
+   DOM helpers
+   ========================= */
+const $ = (id)=>document.getElementById(id);
+
+function setStatus(elId, kind, msg){
+  const el = $(elId);
+  el.className = "status" + (kind ? (" " + kind) : "");
+  el.textContent = msg;
+}
+function setPill(dotId, txtId, kind, text){
+  const dot = $(dotId);
+  dot.className = "dot" + (kind ? (" " + kind) : "");
+  $(txtId).textContent = text;
+}
+function esc(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* =========================
+   API helpers
+   ========================= */
+async function apiGet(path){
+  const res = await fetch(API_BASE + path, { method:"GET", cache:"no-store" });
+  const data = await res.json().catch(()=> ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
+  return data;
+}
+async function apiPost(path, body){
+  const res = await fetch(API_BASE + path, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json().catch(()=> ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
+  return data;
+}
+async function apiPut(path, body){
+  const res = await fetch(API_BASE + path, {
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body || {})
+  });
+  const data = await res.json().catch(()=> ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.error || ("HTTP " + res.status));
+  return data;
+}
+
+/* =========================
+   State
+   ========================= */
+let suppliers = [];
+let currentSupplierId = "";
+let currentSupplier = null;
+let currentEvals = [];
+
+// modalità correzione
+let evalEditMode = false;
+let evalEditSupplierId = "";
+let evalEditPeriod = "";
+
+/* =========================
+   Utilities
+   ========================= */
+function periodToLabel(p){
+  const s = String(p || "");
+  if (s.length < 5) return s;
+  const year = s.slice(0,4);
+  const half = s.slice(4);
+  if (half === "1") return `${year} 1° Sem`;
+  if (half === "2") return `${year} 2° Sem`;
+  return s;
+}
+
+function levelName(v){
+  const n = Number(v);
+  if (n === 0) return "N/D";
+  if (n === 1) return "Critico";
+  if (n === 2) return "Sufficiente";
+  if (n === 3) return "Buono";
+  if (n === 4) return "Eccellente";
+  return "?" + String(v);
+}
+
+function scoreInt(x){ return Number(x ?? 0) | 0; }
+
+function clampInt(x, min, max){
+  const n = Number(x);
+  if (!Number.isFinite(n)) return min;
+  const i = Math.round(n);
+  return Math.min(max, Math.max(min, i));
+}
+
+function normalizeWeights(weights){
+  const def = { punctuality:25, quality:25, documentation:25, reactivity:25 };
+  const w = Object.assign({}, def, weights || {});
+  const sum = Number(w.punctuality) + Number(w.quality) + Number(w.documentation) + Number(w.reactivity);
+  if (!Number.isFinite(sum) || sum <= 0) return def;
+
+  const k = 100 / sum;
+  const p = Math.round(Number(w.punctuality) * k);
+  const q = Math.round(Number(w.quality) * k);
+  const d = Math.round(Number(w.documentation) * k);
+  const r = 100 - (p + q + d);
+  return { punctuality:p, quality:q, documentation:d, reactivity:r };
+}
+
+function calcOverall1000(scores){
+  const w = normalizeWeights(OVERALL_WEIGHTS);
+
+  const p = clampInt(scores?.punctuality, 0, 4);
+  const q = clampInt(scores?.quality, 0, 4);
+  const d = clampInt(scores?.documentation, 0, 4);
+  const r = clampInt(scores?.reactivity, 0, 4);
+
+  const pPct = (p / 4) * 100;
+  const qPct = (q / 4) * 100;
+  const dPct = (d / 4) * 100;
+  const rPct = (r / 4) * 100;
+
+  const overallPct =
+    (pPct * w.punctuality +
+     qPct * w.quality +
+     dPct * w.documentation +
+     rPct * w.reactivity) / 100;
+
+  return Math.round(overallPct * 10);
+}
+
+function statusBaseFromScore(x){
+  const v = Number(x || 0);
+  if (v >= 850) return "Eccellente";
+  if (v >= 700) return "Buono";
+  if (v >= 550) return "Sufficiente";
+  if (v > 0) return "Critico";
+  return "N/D";
+}
+
+function trendFromDelta(delta){
+  const d = Number(delta || 0);
+  if (d >= 80) return " (in forte miglioramento)";
+  if (d >= 30) return " (in miglioramento)";
+  if (d <= -80) return " (in forte peggioramento)";
+  if (d <= -30) return " (in peggioramento)";
+  return " (stabile)";
+}
+
+function deltaHtml(d){
+  const n = Number(d) || 0;
+  if (n > 0) return `<span class="delta up"><span class="sym">▲</span>+${n}</span>`;
+  if (n < 0) return `<span class="delta down"><span class="sym">▼</span>${n}</span>`;
+  return `<span class="delta flat"><span class="sym">•</span><strong>0</strong></span>`;
+}
+
+function sortEvaluationsByPeriodAsc(arr){
+  return arr.slice().sort((a,b)=>{
+    const pa = Number(a.period) || 0;
+    const pb = Number(b.period) || 0;
+    if (pa !== pb) return pa - pb;
+    const ta = Number(a.createdAt) || 0;
+    const tb = Number(b.createdAt) || 0;
+    return ta - tb;
+  });
+}
+
+function setEvalMode(isEdit, supplierId, period){
+  evalEditMode = !!isEdit;
+  evalEditSupplierId = supplierId || "";
+  evalEditPeriod = period || "";
+
+  $("evalModeBox").style.display = evalEditMode ? "block" : "none";
+  $("evalModeText").textContent = evalEditMode
+    ? `Correzione attiva → periodo ${evalEditPeriod} (sovrascrive il record esistente)`
+    : "—";
+
+  $("btnAddEvaluation").textContent = evalEditMode ? "Salva correzione" : "Invia valutazione";
+  $("btnEvalReset").disabled = false;
+}
+
+function resetEvalForm(){
+  $("inEvalPeriod").disabled = false;
+  $("inEvalPeriod").value = "";
+  $("inEvalPunctuality").value = "2";
+  $("inEvalQuality").value = "2";
+  $("inEvalDocumentation").value = "2";
+  $("inEvalReactivity").value = "2";
+  $("inEvalNote").value = "";
+  setEvalMode(false, "", "");
+  $("btnEvalReset").disabled = true;
+}
+
+function evalExistsLocal(supplierId, period){
+  const p = String(period || "").trim();
+  return (currentEvals || []).some(e => String(e.supplierId) === supplierId && String(e.period) === p);
+}
+
+/* =========================
+   Render: suppliers
+   ========================= */
+function fillSupplierSelects(){
+  const mk = (selId, placeholder) => {
+    const sel = $(selId);
+    sel.innerHTML = "";
+    const o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = placeholder;
+    sel.appendChild(o0);
+
+    for (const s of suppliers.slice().sort((a,b)=> String(a.name).localeCompare(String(b.name)))){
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = `${s.name} — ${s.id.slice(0,8)}…`;
+      sel.appendChild(opt);
+    }
+  };
+
+  mk("selSupplier", "Seleziona fornitore…");
+  mk("selVerify", "Seleziona fornitore…");
+  mk("selEvalSupplier", "Seleziona un fornitore…");
+}
+
+function setSupplierForm(s){
+  currentSupplier = s || null;
+  currentSupplierId = s?.id || "";
+  $("inSupplierId").value = currentSupplierId || "";
+  $("inSupplierName").value = s?.name || "";
+  $("inSupplierRef").value = s?.ref || "";
+  $("inSupplierNotes").value = s?.notes || "";
+  $("btnSelectForVerify").disabled = !currentSupplierId;
+}
+
+/* =========================
+   Render: detail + evals
+   ========================= */
+function resetDetail(){
+  $("tblChain").innerHTML = `<tr><td>—</td><td>—</td></tr>`;
+  $("outEvaluations").textContent = "—";
+  $("outChanges").textContent = "—";
+  $("outUiMatch").textContent = "—";
+}
+
+function addRow(label, value){
+  const tr = document.createElement("tr");
+  const td1 = document.createElement("td");
+  const td2 = document.createElement("td");
+  td1.textContent = label;
+  td2.innerHTML = `<div class="mono">${esc(value)}</div>`;
+  tr.appendChild(td1);
+  tr.appendChild(td2);
+  $("tblChain").appendChild(tr);
+}
+
+function startEditEvaluation(e){
+  if (!e || !e.supplierId || !e.period) return;
+
+  $("selEvalSupplier").value = e.supplierId;
+  $("btnAddEvaluation").disabled = false;
+
+  $("inEvalPeriod").value = String(e.period || "");
+  $("inEvalPunctuality").value = String(e.scores?.punctuality ?? 2);
+  $("inEvalQuality").value = String(e.scores?.quality ?? 2);
+  $("inEvalDocumentation").value = String(e.scores?.documentation ?? 2);
+  $("inEvalReactivity").value = String(e.scores?.reactivity ?? 2);
+  $("inEvalNote").value = String(e.note || "");
+
+  $("inEvalPeriod").disabled = true;
+  setEvalMode(true, e.supplierId, String(e.period));
+
+  setStatus("statusEval","warn",`Correzione attiva per periodo ${e.period}. Modifica e poi “Salva correzione”.`);
+
+  try{ $("btnAddEvaluation").scrollIntoView({ behavior:"smooth", block:"center" }); }catch{}
+}
+
+function renderDetailAndEvals(){
+  const s = currentSupplier;
+  const ordered = sortEvaluationsByPeriodAsc(currentEvals || []);
+
+  $("tblChain").innerHTML = "";
+  addRow("ID Fornitore", s?.id || "—");
+  addRow("Nome", s?.name || "—");
+  addRow("Riferimento", s?.ref || "—");
+  addRow("Note", s?.notes || "—");
+  addRow("Creato il", s?.createdAt ? new Date(Number(s.createdAt)*1000).toISOString() : "—");
+  addRow("Aggiornato il", s?.updatedAt ? new Date(Number(s.updatedAt)*1000).toISOString() : "—");
+
+  addRow("N. valutazioni", ordered.length);
+  addRow("Pesi (globali)", `P=${OVERALL_WEIGHTS.punctuality}% • Q=${OVERALL_WEIGHTS.quality}% • D=${OVERALL_WEIGHTS.documentation}% • R=${OVERALL_WEIGHTS.reactivity}%`);
+
+  if (ordered.length){
+    const latest = ordered[ordered.length - 1];
+    addRow("Periodo più recente", latest.period);
+    addRow("Punteggio (periodo)", calcOverall1000(latest.scores));
+
+    const overalls = ordered.map(e => calcOverall1000(e.scores));
+    const avgOverall = Math.round(overalls.reduce((a,b)=>a+b,0) / overalls.length);
+    addRow("Media (tutti i periodi)", avgOverall);
+
+    if (ordered.length >= 2){
+      const prev = ordered[ordered.length - 2];
+      const cur  = ordered[ordered.length - 1];
+      const d = calcOverall1000(cur.scores) - calcOverall1000(prev.scores);
+      addRow("Stato", statusBaseFromScore(calcOverall1000(cur.scores)) + trendFromDelta(d));
+    } else {
+      addRow("Stato", statusBaseFromScore(calcOverall1000(latest.scores)) + " (primo periodo)");
+    }
+  } else {
+    addRow("Periodo più recente", "—");
+    addRow("Punteggio (periodo)", "—");
+    addRow("Media (tutti i periodi)", "—");
+    addRow("Stato", "N/D");
+  }
+
+  if (!ordered.length){
+    $("outEvaluations").textContent = "Nessuna valutazione registrata.";
+    $("outChanges").textContent = "Nessun confronto disponibile.";
+    return;
+  }
+
+  // Lista valutazioni
+  const wrap = document.createElement("div");
+  wrap.style.display = "grid";
+  wrap.style.gap = "10px";
+
+  ordered.forEach((e, idx) => {
+    const created = new Date(Number(e.createdAt)*1000).toISOString();
+    const ov = calcOverall1000(e.scores);
+
+    const card = document.createElement("div");
+    card.className = "mono";
+
+    card.innerHTML =
+      `<div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+         <div style="font-weight:900; margin-bottom:8px;">
+           ${esc(periodToLabel(e.period))} <span style="opacity:.75;">(${esc(e.period)})</span>
+         </div>
+         <button type="button" class="btn secondary" style="padding:6px 10px; font-size:.78rem;" data-edit="1">Correggi</button>
+       </div>` +
+      `<div style="opacity:.85; margin-bottom:8px;">
+         salvata il: ${esc(created)} • idx: ${idx}
+       </div>` +
+      `<div>punteggio=${esc(ov)}</div>` +
+      `<div>puntualità=${esc(levelName(e.scores.punctuality))} | qualità=${esc(levelName(e.scores.quality))} | documentazione=${esc(levelName(e.scores.documentation))} | reattività=${esc(levelName(e.scores.reactivity))}</div>` +
+      `<div>note=${e.note && String(e.note).trim() ? esc(e.note) : "—"}</div>`;
+
+    wrap.appendChild(card);
+
+    const btn = card.querySelector('[data-edit="1"]');
+    if (btn){
+      btn.addEventListener("click", (ev)=>{
+        ev.stopPropagation();
+        startEditEvaluation(e);
+      });
+    }
+  });
+
+  $("outEvaluations").innerHTML = "";
+  $("outEvaluations").appendChild(wrap);
+
+  // Cambiamenti
+  if (ordered.length < 2){
+    $("outChanges").textContent = "Solo un periodo: nessun confronto disponibile.";
+    return;
+  }
+
+  const wrapCh = document.createElement("div");
+  wrapCh.style.display = "grid";
+  wrapCh.style.gap = "10px";
+
+  for (let j=1; j<ordered.length; j++){
+    const prev = ordered[j-1];
+    const cur  = ordered[j];
+
+    const prevOv = calcOverall1000(prev.scores);
+    const curOv  = calcOverall1000(cur.scores);
+
+    const dOverall = curOv - prevOv;
+    const dP = scoreInt(cur.scores.punctuality)   - scoreInt(prev.scores.punctuality);
+    const dQ = scoreInt(cur.scores.quality)       - scoreInt(prev.scores.quality);
+    const dD = scoreInt(cur.scores.documentation) - scoreInt(prev.scores.documentation);
+    const dR = scoreInt(cur.scores.reactivity)    - scoreInt(prev.scores.reactivity);
+
+    const title = `${periodToLabel(prev.period)} → ${periodToLabel(cur.period)}`;
+
+    const chCard = document.createElement("div");
+    chCard.className = "mono";
+    chCard.innerHTML =
+      `<div style="font-weight:900; margin-bottom:8px;">${esc(title)}</div>` +
+
+      `<div class="chline">
+         <div class="lbl">punteggio</div>
+         <div class="val">${esc(prevOv)} → ${esc(curOv)}</div>
+         <div>${deltaHtml(dOverall)}</div>
+       </div>` +
+
+      `<div class="chline">
+         <div class="lbl">puntualità</div>
+         <div class="val">${esc(levelName(prev.scores.punctuality))} → ${esc(levelName(cur.scores.punctuality))}</div>
+         <div>${deltaHtml(dP)}</div>
+       </div>` +
+
+      `<div class="chline">
+         <div class="lbl">qualità</div>
+         <div class="val">${esc(levelName(prev.scores.quality))} → ${esc(levelName(cur.scores.quality))}</div>
+         <div>${deltaHtml(dQ)}</div>
+       </div>` +
+
+      `<div class="chline">
+         <div class="lbl">documentazione</div>
+         <div class="val">${esc(levelName(prev.scores.documentation))} → ${esc(levelName(cur.scores.documentation))}</div>
+         <div>${deltaHtml(dD)}</div>
+       </div>` +
+
+      `<div class="chline">
+         <div class="lbl">reattività</div>
+         <div class="val">${esc(levelName(prev.scores.reactivity))} → ${esc(levelName(cur.scores.reactivity))}</div>
+         <div>${deltaHtml(dR)}</div>
+       </div>`;
+
+    wrapCh.appendChild(chCard);
+  }
+
+  $("outChanges").innerHTML = "";
+  $("outChanges").appendChild(wrapCh);
+}
+
+/* =========================
+   Loaders
+   ========================= */
+async function refreshStatus(){
+  try{
+    await apiGet("/api/status");
+    setPill("dotSession","txtSession","ok","Server: OK");
+  }catch{
+    setPill("dotSession","txtSession","err","Server: NO");
+  }
+}
+
+async function loadSuppliers(){
+  setStatus("statusSupplier","warn","Carico fornitori…");
+  const data = await apiGet("/api/suppliers");
+  suppliers = Array.isArray(data.suppliers) ? data.suppliers : [];
+  fillSupplierSelects();
+  setStatus("statusSupplier","ok","Fornitori caricati: " + suppliers.length);
+}
+
+async function loadEvaluationsForSupplier(supplierId){
+  if (!supplierId) throw new Error("Seleziona un fornitore");
+  setStatus("statusVerify","warn","Carico valutazioni…");
+  const data = await apiGet("/api/evaluations?supplierId=" + encodeURIComponent(supplierId));
+  currentEvals = Array.isArray(data.evaluations) ? data.evaluations : [];
+  setStatus("statusVerify","ok","Valutazioni caricate: " + currentEvals.length);
+}
+
+/* =========================
+   Actions
+   ========================= */
+async function saveSupplier(){
+  const id = $("inSupplierId").value.trim() || null;
+  const name = $("inSupplierName").value.trim();
+  const ref = $("inSupplierRef").value.trim() || null;
+  const notes = $("inSupplierNotes").value.trim() || null;
+
+  if (!name) throw new Error("Nome fornitore mancante");
+
+  setStatus("statusSupplier","warn","Salvataggio…");
+  const res = await apiPost("/api/suppliers", { id, name, ref, notes });
+  const savedId = res.id;
+
+  await loadSuppliers();
+
+  $("selSupplier").value = savedId;
+  const s = suppliers.find(x => x.id === savedId) || null;
+  setSupplierForm(s);
+
+  setStatus("statusSupplier","ok","Salvato. Id: " + savedId);
+}
+
+async function verifySupplier(){
+  const supplierId = $("selVerify").value.trim();
+  if (!supplierId) throw new Error("Seleziona un fornitore");
+
+  currentSupplier = suppliers.find(x => x.id === supplierId) || null;
+  currentSupplierId = supplierId;
+
+  $("outUiMatch").textContent = currentSupplier ? `${currentSupplier.name} — ${currentSupplier.id}` : supplierId;
+
+  await loadEvaluationsForSupplier(supplierId);
+  renderDetailAndEvals();
+
+  $("selEvalSupplier").value = supplierId;
+  $("btnAddEvaluation").disabled = false;
+  $("btnEvalReset").disabled = true;
+}
+
+async function addOrEditEvaluation(){
+  const supplierId = $("selEvalSupplier").value.trim();
+  if (!supplierId) throw new Error("Seleziona un fornitore per la valutazione");
+
+  const period = String($("inEvalPeriod").value || "").trim();
+  if (!/^\d+$/.test(period)) throw new Error("Periodo non valido (solo numeri)");
+
+  const scores = {
+    punctuality: Number($("inEvalPunctuality").value),
+    quality: Number($("inEvalQuality").value),
+    documentation: Number($("inEvalDocumentation").value),
+    reactivity: Number($("inEvalReactivity").value)
+  };
+
+  for (const k of Object.keys(scores)){
+    const v = scores[k];
+    if (!Number.isInteger(v) || v < 0 || v > 4) throw new Error("Score fuori range 0..4: " + k);
+  }
+
+  const note = String($("inEvalNote").value || "").trim() || null;
+
+  // --- CORREZIONE ---
+  if (evalEditMode){
+    if (supplierId !== evalEditSupplierId || period !== evalEditPeriod){
+      throw new Error("Mismatch correzione: rientra in modalità Correggi dal periodo giusto.");
+    }
+
+    const ok = confirm(
+      `Sei sicuro di voler correggere la valutazione del periodo ${period}?\n` +
+      `Questa operazione sovrascrive il record esistente.`
+    );
+    if (!ok) return;
+
+    setStatus("statusEval","warn","Salvo correzione…");
+    await apiPut("/api/evaluations", { supplierId, period, scores, note });
+    setStatus("statusEval","ok","Correzione salvata.");
+
+    resetEvalForm();
+
+    if ($("selVerify").value.trim() === supplierId){
+      await verifySupplier();
+    }
+    return;
+  }
+
+  // --- INSERIMENTO (con blocco se già esiste) ---
+  if ($("selVerify").value.trim() === supplierId && evalExistsLocal(supplierId, period)){
+    throw new Error(`Esiste già una valutazione per il periodo ${period}. Usa “Correggi” dalla lista.`);
+  }
+
+  setStatus("statusEval","warn","Invio valutazione…");
+  await apiPost("/api/evaluations", { supplierId, period, scores, note });
+  setStatus("statusEval","ok","Valutazione salvata.");
+
+  if ($("selVerify").value.trim() === supplierId){
+    await verifySupplier();
+  }
+}
+
+/* =========================
+   Wire events
+   ========================= */
+$("btnRefresh").addEventListener("click", async ()=>{
+  await refreshStatus();
+  try{ await loadSuppliers(); }catch{}
+});
+
+$("btnLoadSupplierList").addEventListener("click", async ()=>{
+  try{
+    await loadSuppliers();
+    setStatus("statusVerify","ok","Lista fornitori caricata.");
+    $("btnVerify").disabled = false;
+  }catch(e){
+    setStatus("statusVerify","err", e?.message || String(e));
+  }
+});
+
+$("selSupplier").addEventListener("change", ()=>{
+  const id = $("selSupplier").value.trim();
+  const s = suppliers.find(x => x.id === id) || null;
+  setSupplierForm(s);
+});
+
+$("btnNew").addEventListener("click", ()=>{
+  $("selSupplier").value = "";
+  setSupplierForm(null);
+  $("inSupplierId").value = "";
+  $("inSupplierName").value = "";
+  $("inSupplierRef").value = "";
+  $("inSupplierNotes").value = "";
+  setStatus("statusSupplier","warn","Nuovo record: compila e salva.");
+});
+
+$("btnSaveSupplier").addEventListener("click", async ()=>{
+  try{ await saveSupplier(); }
+  catch(e){ setStatus("statusSupplier","err", e?.message || String(e)); }
+});
+
+$("btnSelectForVerify").addEventListener("click", ()=>{
+  const id = $("inSupplierId").value.trim();
+  if (!id) return;
+  $("selVerify").value = id;
+  $("btnVerify").disabled = false;
+  setStatus("statusVerify","warn","Selezionato. Premi “Carica valutazioni”.");
+});
+
+$("btnVerify").addEventListener("click", async ()=>{
+  try{ await verifySupplier(); }
+  catch(e){ setStatus("statusVerify","err", e?.message || String(e)); }
+});
+
+$("selVerify").addEventListener("change", ()=>{
+  const id = $("selVerify").value.trim();
+  $("btnVerify").disabled = !id;
+  $("outUiMatch").textContent = "—";
+  resetDetail();
+});
+
+$("selEvalSupplier").addEventListener("change", ()=>{
+  const id = $("selEvalSupplier").value.trim();
+  $("btnAddEvaluation").disabled = !id;
+
+  if (evalEditMode && id !== evalEditSupplierId){
+    resetEvalForm();
+    setStatus("statusEval","warn","Modalità correzione annullata (cambio fornitore).");
+  }
+
+  $("btnEvalReset").disabled = !id;
+});
+
+$("btnAddEvaluation").addEventListener("click", async ()=>{
+  try{ await addOrEditEvaluation(); }
+  catch(e){ setStatus("statusEval","err", e?.message || String(e)); }
+});
+
+$("btnEvalReset").addEventListener("click", ()=>{
+  resetEvalForm();
+  setStatus("statusEval","warn","Modifica annullata.");
+});
+
+/* =========================
+   Boot
+   ========================= */
+(async function init(){
+  setPill("dotSession","txtSession","warn","Server: …");
+  await refreshStatus();
+
+  try{
+    await loadSuppliers();
+    $("btnVerify").disabled = false;
+  }catch(e){
+    setStatus("statusSupplier","err","Impossibile caricare fornitori: " + (e?.message || String(e)));
+  }
+
+  resetDetail();
+  resetEvalForm();
+  setStatus("statusVerify","warn","Seleziona un fornitore e carica le valutazioni.");
+  setStatus("statusEval","warn","Seleziona un fornitore per abilitare l’invio.");
+})();
+</script>
+
+<footer class="footer-release">
+  <div class="release-pill">
+    Supplier Quality · v2.1.1
+  </div>
+</footer>
+
+</body>
+</html>
