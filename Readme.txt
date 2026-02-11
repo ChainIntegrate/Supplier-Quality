@@ -52,13 +52,17 @@ STRUTTURA DELLA CARTELLA
 All’interno della cartella troverai:
 
 - SupplierQuality.exe
-- Avvia_SupplierQuality.bat
+- run.bat
 - README.txt
 - wwwroot\
+  - favicon.ico
+  - index.html
 - data\
   - suppliers.json
   - evaluations.json
   - backups\
+-asset\
+  -icona.ico
 
 SPIEGAZIONE:
 - wwwroot\
@@ -71,6 +75,9 @@ SPIEGAZIONE:
 - data\backups\
   contiene le copie di sicurezza automatiche
   dei file dati.
+  
+- asset\
+  contiene icona per file start
 
 ------------------------------------------------------------
 
@@ -79,7 +86,7 @@ COME AVVIARE L’APPLICAZIONE
 1. Apri la cartella estratta
 2. Fai doppio click su:
 
-   Avvia_SupplierQuality.bat
+   Supplier-Quality
 
 3. Attendi alcuni secondi
 4. L’interfaccia si apre nel browser
