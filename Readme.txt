@@ -21,6 +21,7 @@ e valutazione dei fornitori.
 
 - Funziona solo in rete locale (LAN o VPN)
 - Non si installa
+- Non modifica il sistema operativo
 - Non invia dati all’esterno
 - Usa solo file locali
 
@@ -51,7 +52,7 @@ STRUTTURA DELLA CARTELLA
 
 All’interno della cartella troverai:
 
-- SupplierQuality.exe
+- SQ_V1.exe
 - run.bat
 - README.txt
 - wwwroot\
@@ -61,23 +62,32 @@ All’interno della cartella troverai:
   - suppliers.json
   - evaluations.json
   - backups\
--asset\
-  -icona.ico
+- asset\
+  - icona.ico
+- _app_profile\   (creata automaticamente)
 
 SPIEGAZIONE:
-- wwwroot\
-  contiene i file dell’interfaccia (HTML, CSS, JS).
-  Non contiene dati sensibili.
 
-- data\
-  contiene i dati dell’applicazione.
+wwwroot\
+Contiene i file dell’interfaccia (HTML, CSS, JS).
+Non contiene dati sensibili.
 
-- data\backups\
-  contiene le copie di sicurezza automatiche
-  dei file dati.
-  
-- asset\
-  contiene icona per file start
+data\
+Contiene i dati dell’applicazione.
+
+data\backups\
+Contiene le copie di sicurezza automatiche dei file dati.
+
+asset\
+Contiene l’icona dell’applicazione.
+
+_app_profile\
+Cartella creata automaticamente al primo avvio.
+Serve per avviare il browser in modalità “app” isolata,
+senza usare il profilo personale dell’utente.
+
+Può essere eliminata solo a applicazione chiusa.
+Verrà ricreata automaticamente al successivo avvio.
 
 ------------------------------------------------------------
 
@@ -86,10 +96,17 @@ COME AVVIARE L’APPLICAZIONE
 1. Apri la cartella estratta
 2. Fai doppio click su:
 
-   Supplier-Quality
+   run.bat
 
 3. Attendi alcuni secondi
-4. L’interfaccia si apre nel browser
+4. L’interfaccia si apre in modalità applicazione
+
+L’app può usare:
+- Google Chrome
+- Microsoft Edge
+- Oppure il browser predefinito
+
+Non è richiesta installazione.
 
 ------------------------------------------------------------
 
@@ -101,16 +118,14 @@ alcuni messaggi di sicurezza.
 1) AVVISO DI ESECUZIONE FILE
 
 Messaggio tipico:
-"Sei sicuro di voler eseguire questo file?"
-oppure
 "Windows ha protetto il PC"
 
-Questo messaggio NON indica un virus.
+Questo NON indica un virus.
 
 Compare perché l’applicazione:
 - è interna
 - non è firmata digitalmente
-- non è installata tramite Microsoft Store
+- non è distribuita tramite Microsoft Store
 
 COSA FARE:
 - clicca su "Ulteriori informazioni"
@@ -118,15 +133,15 @@ COSA FARE:
 
 2) RICHIESTA DI ACCESSO ALLA RETE
 
-Subito dopo, Windows può chiedere
-se consentire l’accesso alla rete.
+Windows può chiedere di consentire l’accesso alla rete.
 
-Scegliere:
-✔ RETE PRIVATA (ufficio / azienda / VPN)
+Selezionare:
+✔ RETE PRIVATA
 ✖ NON rete pubblica
 
-Questa scelta serve solo per permettere
-al browser di raggiungere l’interfaccia locale.
+Serve solo per permettere al browser
+di accedere al server locale (127.0.0.1).
+
 Nessun dato viene inviato su Internet.
 
 ------------------------------------------------------------
@@ -142,9 +157,10 @@ http://127.0.0.1:8085/
 CHIUSURA DELL’APPLICAZIONE
 
 Per chiudere:
-- chiudi la finestra dell’app
-- oppure chiudi il terminale associato
 
+- chiudi la finestra dell’applicazione
+
+Il server locale viene chiuso automaticamente.
 Non resta nulla in esecuzione.
 
 ------------------------------------------------------------
@@ -152,9 +168,10 @@ Non resta nulla in esecuzione.
 SICUREZZA E DATI
 
 - Nessun accesso a Internet
-- Nessuna installazione sul sistema
-- Dati locali e sotto controllo
+- Nessuna installazione nel sistema
+- Dati completamente locali
 - Backup automatici in data\backups
+- Profilo browser isolato (_app_profile)
 
 ------------------------------------------------------------
 
