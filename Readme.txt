@@ -54,6 +54,7 @@ All’interno della cartella troverai:
 
 - SQ_V1.exe
 - run.bat
+- Supplier-Quality (icona di lancio app)
 - README.txt
 - wwwroot\
   - favicon.ico
@@ -96,7 +97,7 @@ COME AVVIARE L’APPLICAZIONE
 1. Apri la cartella estratta
 2. Fai doppio click su:
 
-   run.bat
+   Supplier-Quality
 
 3. Attendi alcuni secondi
 4. L’interfaccia si apre in modalità applicazione
