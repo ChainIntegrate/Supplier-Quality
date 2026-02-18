@@ -12,11 +12,10 @@
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="theme-color" content="#2ea7d6" />
   <link rel="icon" href="/favicon.ico">
-  
+
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -249,73 +248,34 @@
       color: var(--muted);
       box-shadow: 0 6px 18px rgba(10,14,20,0.08);
       backdrop-filter: blur(6px);
+      pointer-events: auto;
     }
-
-    /* Footer links (ChainIntegrate) */
-.release-pill{
-  pointer-events: auto; /* altrimenti non clicchi nulla */
-}
-
-.release-pill .sep{
-  opacity: .35;
-  margin: 0 8px;
-}
-
-.release-links{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.release-link{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: inherit;
-  text-decoration: none;
-  opacity: .9;
-  transition: opacity .12s ease, transform .12s ease;
-}
-
-.release-link:hover{
-  opacity: 1;
-  transform: translateY(-1px);
-}
-
-.release-ico{
-  width: 14px;
-  height: 14px;
-  display: inline-block;
-  opacity: .85;
-}
-
+    .release-pill .sep{ opacity: .35; margin: 0 8px; }
+    .release-links{
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .release-link{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: inherit;
+      text-decoration: none;
+      opacity: .9;
+      transition: opacity .12s ease, transform .12s ease;
+    }
+    .release-link:hover{ opacity: 1; transform: translateY(-1px); }
+    .release-ico{ width: 14px; height: 14px; display: inline-block; opacity: .85; }
 
     @media (max-width: 980px){
-  header{
-    position: sticky; /* resta sempre raggiungibile */
-    top: 0;
-    padding: 12px 10px;
-  }
-
-  .header-inner{
-    justify-content: space-between; /* brand a sinistra, bottone a destra */
-    padding: 8px 10px;
-  }
-
-  nav{
-    display:flex;          /* NON nascondere tutta la nav */
-    align-items:center;
-    gap:10px;
-  }
-
-  /* su piccolo: togliamo le pill e lasciamo solo il bottone */
-  #pillSession, #pillWallet{ display:none; }
-
-  .btn{ padding: 10px 14px; }
-
-  .grid{ grid-template-columns: minmax(0,1fr); }
-}
-
+      header{ position: sticky; top: 0; padding: 12px 10px; }
+      .header-inner{ justify-content: space-between; padding: 8px 10px; }
+      nav{ display:flex; align-items:center; gap:10px; }
+      #pillSession, #pillWallet{ display:none; }
+      .btn{ padding: 10px 14px; }
+      .grid{ grid-template-columns: minmax(0,1fr); }
+    }
   </style>
 </head>
 
@@ -332,7 +292,9 @@
     <nav>
       <div class="pill" id="pillSession"><span class="dot" id="dotSession"></span><span id="txtSession">Server: …</span></div>
       <div class="pill" id="pillWallet"><span class="dot ok" id="dotWallet"></span><span id="txtWallet">Archivio: data/*.json</span></div>
-      <button class="btn secondary" id="btnRefresh" type="button">Aggiorna</button>
+      <button class="btn secondary" id="btnShutdown" type="button">Chiudi</button>
+<button class="btn secondary" id="btnRefresh" type="button">Aggiorna</button>
+
     </nav>
   </div>
 </header>
@@ -347,6 +309,7 @@
         <p class="sub">
           In questa versione il fornitore è un record in <strong>data/suppliers.json</strong>.
           Le valutazioni sono in <strong>data/evaluations.json</strong>.
+          I metodi sono in <strong>data/methods.json</strong>.
         </p>
 
         <div class="row">
@@ -368,6 +331,19 @@
           <div class="field">
             <label>Riferimento (opzionale)</label>
             <input id="inSupplierRef" placeholder="Codice/Ref interno (opzionale)" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Metodo di verifica</label>
+            <select id="selSupplierMethod">
+              <option value="">(Default) 25/25/25/25</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Info metodo</label>
+            <input id="inSupplierMethodInfo" placeholder="—" disabled />
           </div>
         </div>
 
@@ -442,6 +418,72 @@
           <div style="font-weight:800; margin-bottom:6px;">Cambiamenti (per periodo)</div>
           <div id="outChanges">—</div>
         </div>
+      </div>
+    </section>
+
+    <!-- METHODS -->
+    <section style="margin-top:14px;">
+      <div class="card">
+        <h2>Metodi di verifica</h2>
+        <p class="sub">
+          Definisci tipologie di valutazione (pesi % su Puntualità/Qualità/Documentazione/Reattività) e assegnale ai fornitori.
+        </p>
+
+        <div class="row">
+          <div class="field">
+            <label>Metodo (lista)</label>
+            <select id="selMethod"></select>
+          </div>
+          <div class="field">
+            <label>ID Metodo</label>
+            <input id="inMethodId" placeholder="(auto)" disabled />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Nome metodo</label>
+            <input id="inMethodName" placeholder="Es. Produzione critica / Meccanica / Fornitura standard…" />
+          </div>
+          <div class="field">
+            <label>Note (opzionale)</label>
+            <input id="inMethodNotes" placeholder="Note interne…" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Puntualità (%)</label>
+            <input id="inW_P" type="number" min="0" max="100" value="25" />
+          </div>
+          <div class="field">
+            <label>Qualità (%)</label>
+            <input id="inW_Q" type="number" min="0" max="100" value="25" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Documentazione (%)</label>
+            <input id="inW_D" type="number" min="0" max="100" value="25" />
+          </div>
+          <div class="field">
+            <label>Reattività (%)</label>
+            <input id="inW_R" type="number" min="0" max="100" value="25" />
+          </div>
+        </div>
+
+        <div class="mini">
+          Somma: <strong id="sumW">100</strong>%.
+          <span id="sumWHint" style="font-weight:800;"></span>
+        </div>
+
+        <div class="actions">
+          <button class="btn secondary" id="btnMethodNew" type="button">Nuovo metodo</button>
+          <button class="btn primary" id="btnMethodSave" type="button">Salva metodo</button>
+        </div>
+
+        <div class="status" id="statusMethod">Pronta.</div>
       </div>
     </section>
 
@@ -539,16 +581,6 @@
 
 <script>
 /* =========================
-   PESI GLOBALI (somma 100)
-   ========================= */
-const OVERALL_WEIGHTS = {
-  punctuality: 25,
-  quality: 25,
-  documentation: 25,
-  reactivity: 25
-};
-
-/* =========================
    CONFIG
    ========================= */
 const API_BASE = "";
@@ -610,6 +642,11 @@ let currentSupplierId = "";
 let currentSupplier = null;
 let currentEvals = [];
 
+// metodi
+const DEFAULT_WEIGHTS = { punctuality:25, quality:25, documentation:25, reactivity:25 };
+let methods = [];
+let methodsById = {};
+
 // modalità correzione
 let evalEditMode = false;
 let evalEditSupplierId = "";
@@ -647,22 +684,61 @@ function clampInt(x, min, max){
   return Math.min(max, Math.max(min, i));
 }
 
-function normalizeWeights(weights){
-  const def = { punctuality:25, quality:25, documentation:25, reactivity:25 };
-  const w = Object.assign({}, def, weights || {});
-  const sum = Number(w.punctuality) + Number(w.quality) + Number(w.documentation) + Number(w.reactivity);
-  if (!Number.isFinite(sum) || sum <= 0) return def;
+/* ===== PESI: somma DEVE essere 100 (rigido) ===== */
+function weightsSum(w){
+  const p = Number(w?.punctuality) || 0;
+  const q = Number(w?.quality) || 0;
+  const d = Number(w?.documentation) || 0;
+  const r = Number(w?.reactivity) || 0;
+  return (p+q+d+r);
+}
+function validateWeightsStrict(w){
+  const p = Number(w?.punctuality);
+  const q = Number(w?.quality);
+  const d = Number(w?.documentation);
+  const r = Number(w?.reactivity);
+  const arr = [p,q,d,r];
 
-  const k = 100 / sum;
-  const p = Math.round(Number(w.punctuality) * k);
-  const q = Math.round(Number(w.quality) * k);
-  const d = Math.round(Number(w.documentation) * k);
-  const r = 100 - (p + q + d);
-  return { punctuality:p, quality:q, documentation:d, reactivity:r };
+  if (arr.some(x => !Number.isFinite(x))) return { ok:false, err:"Valori non validi" };
+  if (arr.some(x => x < 0 || x > 100)) return { ok:false, err:"Ogni peso deve stare tra 0 e 100" };
+  if (arr.some(x => !Number.isInteger(x))) return { ok:false, err:"I pesi devono essere interi" };
+
+  const sum = weightsSum(w);
+  if (sum !== 100) return { ok:false, err:`Somma pesi = ${sum}. Deve essere 100.` };
+
+  return { ok:true, err:null };
 }
 
-function calcOverall1000(scores){
-  const w = normalizeWeights(OVERALL_WEIGHTS);
+function methodLabel(m){
+  if (!m) return "(Default) 25/25/25/25";
+  const w = m.weights || {};
+  return `${m.name} — P${w.punctuality}% Q${w.quality}% D${w.documentation}% R${w.reactivity}%`;
+}
+
+function getSupplierWeights(supplier){
+  const mid = String(supplier?.methodId || "").trim();
+  const m = mid ? methodsById[mid] : null;
+  if (!m?.weights) return DEFAULT_WEIGHTS;
+
+  const w = {
+    punctuality: Number(m.weights.punctuality),
+    quality: Number(m.weights.quality),
+    documentation: Number(m.weights.documentation),
+    reactivity: Number(m.weights.reactivity)
+  };
+
+  // se per qualche motivo i dati sono corrotti, fallback
+  const v = validateWeightsStrict({
+    punctuality: clampInt(w.punctuality,0,100),
+    quality: clampInt(w.quality,0,100),
+    documentation: clampInt(w.documentation,0,100),
+    reactivity: clampInt(w.reactivity,0,100)
+  });
+  return v.ok ? w : DEFAULT_WEIGHTS;
+}
+
+function calcOverall1000(scores, weights){
+  const w = weights || DEFAULT_WEIGHTS;
 
   const p = clampInt(scores?.punctuality, 0, 4);
   const q = clampInt(scores?.quality, 0, 4);
@@ -775,6 +851,38 @@ function fillSupplierSelects(){
   mk("selEvalSupplier", "Seleziona un fornitore…");
 }
 
+function fillMethodSelects(){
+  // gestione metodi
+  const selM = $("selMethod");
+  selM.innerHTML = "";
+  const o0 = document.createElement("option");
+  o0.value = "";
+  o0.textContent = "Seleziona metodo…";
+  selM.appendChild(o0);
+
+  for (const m of methods.slice().sort((a,b)=> String(a.name).localeCompare(String(b.name)))){
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = methodLabel(m);
+    selM.appendChild(opt);
+  }
+
+  // dropdown metodo sul fornitore
+  const selSM = $("selSupplierMethod");
+  selSM.innerHTML = "";
+  const d0 = document.createElement("option");
+  d0.value = "";
+  d0.textContent = "(Default) 25/25/25/25";
+  selSM.appendChild(d0);
+
+  for (const m of methods.slice().sort((a,b)=> String(a.name).localeCompare(String(b.name)))){
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = methodLabel(m);
+    selSM.appendChild(opt);
+  }
+}
+
 function setSupplierForm(s){
   currentSupplier = s || null;
   currentSupplierId = s?.id || "";
@@ -782,7 +890,56 @@ function setSupplierForm(s){
   $("inSupplierName").value = s?.name || "";
   $("inSupplierRef").value = s?.ref || "";
   $("inSupplierNotes").value = s?.notes || "";
+
+  // metodo assegnato
+  const mid = String(s?.methodId || "");
+  $("selSupplierMethod").value = mid;
+  const m = mid ? methodsById[mid] : null;
+  $("inSupplierMethodInfo").value = m ? methodLabel(m) : "(Default) 25/25/25/25";
+
   $("btnSelectForVerify").disabled = !currentSupplierId;
+}
+
+/* =========================
+   Render: methods
+   ========================= */
+function updateWeightSumUI(){
+  const w = {
+    punctuality: clampInt(Number($("inW_P").value), 0, 100),
+    quality: clampInt(Number($("inW_Q").value), 0, 100),
+    documentation: clampInt(Number($("inW_D").value), 0, 100),
+    reactivity: clampInt(Number($("inW_R").value), 0, 100),
+  };
+  const sum = weightsSum(w);
+  $("sumW").textContent = String(sum);
+
+  const v = validateWeightsStrict(w);
+  const hint = $("sumWHint");
+
+  if (!v.ok){
+    hint.textContent = " → " + v.err;
+    hint.style.color = "var(--err)";
+    $("btnMethodSave").disabled = true;
+    return { ok:false, weights:w, err:v.err };
+  }
+
+  hint.textContent = " → OK";
+  hint.style.color = "var(--ok)";
+  $("btnMethodSave").disabled = false;
+  return { ok:true, weights:w, err:null };
+}
+
+function setMethodForm(m){
+  $("inMethodId").value = m?.id || "";
+  $("inMethodName").value = m?.name || "";
+  $("inMethodNotes").value = m?.notes || "";
+
+  $("inW_P").value = String(m?.weights?.punctuality ?? 25);
+  $("inW_Q").value = String(m?.weights?.quality ?? 25);
+  $("inW_D").value = String(m?.weights?.documentation ?? 25);
+  $("inW_R").value = String(m?.weights?.reactivity ?? 25);
+
+  updateWeightSumUI();
 }
 
 /* =========================
@@ -830,6 +987,7 @@ function startEditEvaluation(e){
 function renderDetailAndEvals(){
   const s = currentSupplier;
   const ordered = sortEvaluationsByPeriodAsc(currentEvals || []);
+  const weights = getSupplierWeights(s);
 
   $("tblChain").innerHTML = "";
   addRow("ID Fornitore", s?.id || "—");
@@ -839,25 +997,30 @@ function renderDetailAndEvals(){
   addRow("Creato il", s?.createdAt ? new Date(Number(s.createdAt)*1000).toISOString() : "—");
   addRow("Aggiornato il", s?.updatedAt ? new Date(Number(s.updatedAt)*1000).toISOString() : "—");
 
+  const mid = String(s?.methodId || "").trim();
+  const m = mid ? methodsById[mid] : null;
+
+  addRow("Metodo verifica", m ? m.name : "(Default)");
+  addRow("Pesi (metodo)", `P=${weights.punctuality}% • Q=${weights.quality}% • D=${weights.documentation}% • R=${weights.reactivity}%`);
+
   addRow("N. valutazioni", ordered.length);
-  addRow("Pesi (globali)", `P=${OVERALL_WEIGHTS.punctuality}% • Q=${OVERALL_WEIGHTS.quality}% • D=${OVERALL_WEIGHTS.documentation}% • R=${OVERALL_WEIGHTS.reactivity}%`);
 
   if (ordered.length){
     const latest = ordered[ordered.length - 1];
     addRow("Periodo più recente", latest.period);
-    addRow("Punteggio (periodo)", calcOverall1000(latest.scores));
+    addRow("Punteggio (periodo)", calcOverall1000(latest.scores, weights));
 
-    const overalls = ordered.map(e => calcOverall1000(e.scores));
+    const overalls = ordered.map(e => calcOverall1000(e.scores, weights));
     const avgOverall = Math.round(overalls.reduce((a,b)=>a+b,0) / overalls.length);
     addRow("Media (tutti i periodi)", avgOverall);
 
     if (ordered.length >= 2){
       const prev = ordered[ordered.length - 2];
       const cur  = ordered[ordered.length - 1];
-      const d = calcOverall1000(cur.scores) - calcOverall1000(prev.scores);
-      addRow("Stato", statusBaseFromScore(calcOverall1000(cur.scores)) + trendFromDelta(d));
+      const d = calcOverall1000(cur.scores, weights) - calcOverall1000(prev.scores, weights);
+      addRow("Stato", statusBaseFromScore(calcOverall1000(cur.scores, weights)) + trendFromDelta(d));
     } else {
-      addRow("Stato", statusBaseFromScore(calcOverall1000(latest.scores)) + " (primo periodo)");
+      addRow("Stato", statusBaseFromScore(calcOverall1000(latest.scores, weights)) + " (primo periodo)");
     }
   } else {
     addRow("Periodo più recente", "—");
@@ -879,7 +1042,7 @@ function renderDetailAndEvals(){
 
   ordered.forEach((e, idx) => {
     const created = new Date(Number(e.createdAt)*1000).toISOString();
-    const ov = calcOverall1000(e.scores);
+    const ov = calcOverall1000(e.scores, weights);
 
     const card = document.createElement("div");
     card.className = "mono";
@@ -926,8 +1089,8 @@ function renderDetailAndEvals(){
     const prev = ordered[j-1];
     const cur  = ordered[j];
 
-    const prevOv = calcOverall1000(prev.scores);
-    const curOv  = calcOverall1000(cur.scores);
+    const prevOv = calcOverall1000(prev.scores, weights);
+    const curOv  = calcOverall1000(cur.scores, weights);
 
     const dOverall = curOv - prevOv;
     const dP = scoreInt(cur.scores.punctuality)   - scoreInt(prev.scores.punctuality);
@@ -991,6 +1154,17 @@ async function refreshStatus(){
   }
 }
 
+async function loadMethods(){
+  setStatus("statusMethod","warn","Carico metodi…");
+  const data = await apiGet("/api/methods");
+  methods = Array.isArray(data.methods) ? data.methods : [];
+  methodsById = {};
+  for (const m of methods) methodsById[m.id] = m;
+
+  fillMethodSelects();
+  setStatus("statusMethod","ok","Metodi caricati: " + methods.length);
+}
+
 async function loadSuppliers(){
   setStatus("statusSupplier","warn","Carico fornitori…");
   const data = await apiGet("/api/suppliers");
@@ -1015,11 +1189,12 @@ async function saveSupplier(){
   const name = $("inSupplierName").value.trim();
   const ref = $("inSupplierRef").value.trim() || null;
   const notes = $("inSupplierNotes").value.trim() || null;
+  const methodId = $("selSupplierMethod").value.trim() || null;
 
   if (!name) throw new Error("Nome fornitore mancante");
 
   setStatus("statusSupplier","warn","Salvataggio…");
-  const res = await apiPost("/api/suppliers", { id, name, ref, notes });
+  const res = await apiPost("/api/suppliers", { id, name, ref, notes, methodId });
   const savedId = res.id;
 
   await loadSuppliers();
@@ -1046,6 +1221,43 @@ async function verifySupplier(){
   $("selEvalSupplier").value = supplierId;
   $("btnAddEvaluation").disabled = false;
   $("btnEvalReset").disabled = true;
+}
+
+async function saveMethod(){
+  const id = $("inMethodId").value.trim() || null;
+  const name = $("inMethodName").value.trim();
+  const notes = $("inMethodNotes").value.trim() || null;
+
+  if (!name) throw new Error("Nome metodo mancante");
+
+  const w = {
+    punctuality: clampInt(Number($("inW_P").value), 0, 100),
+    quality: clampInt(Number($("inW_Q").value), 0, 100),
+    documentation: clampInt(Number($("inW_D").value), 0, 100),
+    reactivity: clampInt(Number($("inW_R").value), 0, 100),
+  };
+
+  const v = validateWeightsStrict(w);
+  if (!v.ok) throw new Error(v.err);
+
+  setStatus("statusMethod","warn","Salvataggio metodo…");
+  const res = await apiPost("/api/methods", { id, name, notes, weights: w });
+  const savedId = res.id;
+
+  await loadMethods();
+
+  $("selMethod").value = savedId;
+  const m = methodsById[savedId] || null;
+  setMethodForm(m);
+
+  // refresh suppliers dropdown, perché la lista metodi è cambiata
+  // (loadMethods già l'ha fatto, ma qui assicuriamo anche la coerenza con eventuale selezione fornitore)
+  if (currentSupplierId){
+    const s = suppliers.find(x => x.id === currentSupplierId) || null;
+    if (s) setSupplierForm(s);
+  }
+
+  setStatus("statusMethod","ok","Metodo salvato. Id: " + savedId);
 }
 
 async function addOrEditEvaluation(){
@@ -1107,13 +1319,48 @@ async function addOrEditEvaluation(){
   }
 }
 
+async function shutdownApp(){
+  const ok = confirm("Chiudere Supplier Quality?\n\nIl server verrà arrestato e l'app si chiuderà.");
+  if (!ok) return;
+
+  try{
+    // chiamata shutdown
+    await apiPost("/api/shutdown", {});
+  }catch(e){
+    // anche se fallisce, proviamo a chiudere la finestra
+    // (ma mostriamo un messaggio)
+    alert("Non riesco a chiudere il server: " + (e?.message || String(e)));
+  }
+
+  // prova a chiudere la window (in modalità --app di Edge funziona quasi sempre)
+  try{ window.close(); }catch{}
+
+  // fallback: schermata neutra (se window.close è bloccato)
+  try{
+    document.body.innerHTML =
+      '<div style="font-family:Montserrat,system-ui; padding:28px; color:#546576;">' +
+      '<h2 style="margin:0 0 10px; color:#0a0e14;">App chiusa</h2>' +
+      '<div>Puoi chiudere questa finestra.</div>' +
+      '</div>';
+  }catch{}
+}
+
+
+
+
 /* =========================
    Wire events
    ========================= */
 $("btnRefresh").addEventListener("click", async ()=>{
   await refreshStatus();
+  try{ await loadMethods(); }catch{}
   try{ await loadSuppliers(); }catch{}
 });
+
+$("btnShutdown").addEventListener("click", async ()=>{
+  await shutdownApp();
+});
+
 
 $("btnLoadSupplierList").addEventListener("click", async ()=>{
   try{
@@ -1131,6 +1378,12 @@ $("selSupplier").addEventListener("change", ()=>{
   setSupplierForm(s);
 });
 
+$("selSupplierMethod").addEventListener("change", ()=>{
+  const mid = $("selSupplierMethod").value.trim();
+  const m = mid ? methodsById[mid] : null;
+  $("inSupplierMethodInfo").value = m ? methodLabel(m) : "(Default) 25/25/25/25";
+});
+
 $("btnNew").addEventListener("click", ()=>{
   $("selSupplier").value = "";
   setSupplierForm(null);
@@ -1138,6 +1391,8 @@ $("btnNew").addEventListener("click", ()=>{
   $("inSupplierName").value = "";
   $("inSupplierRef").value = "";
   $("inSupplierNotes").value = "";
+  $("selSupplierMethod").value = "";
+  $("inSupplierMethodInfo").value = "(Default) 25/25/25/25";
   setStatus("statusSupplier","warn","Nuovo record: compila e salva.");
 });
 
@@ -1188,12 +1443,40 @@ $("btnEvalReset").addEventListener("click", ()=>{
   setStatus("statusEval","warn","Modifica annullata.");
 });
 
+// metodi: live sum + blocco salvataggio
+["inW_P","inW_Q","inW_D","inW_R"].forEach(id=>{
+  $(id).addEventListener("input", ()=>{ updateWeightSumUI(); });
+});
+
+$("btnMethodNew").addEventListener("click", ()=>{
+  $("selMethod").value = "";
+  setMethodForm(null);
+  setStatus("statusMethod","warn","Nuovo metodo: compila e salva.");
+});
+
+$("btnMethodSave").addEventListener("click", async ()=>{
+  try{ await saveMethod(); }
+  catch(e){ setStatus("statusMethod","err", e?.message || String(e)); }
+});
+
+$("selMethod").addEventListener("change", ()=>{
+  const id = $("selMethod").value.trim();
+  const m = id ? methodsById[id] : null;
+  setMethodForm(m);
+});
+
 /* =========================
    Boot
    ========================= */
 (async function init(){
   setPill("dotSession","txtSession","warn","Server: …");
   await refreshStatus();
+
+  try{
+    await loadMethods();
+  }catch(e){
+    setStatus("statusMethod","err","Impossibile caricare metodi: " + (e?.message || String(e)));
+  }
 
   try{
     await loadSuppliers();
@@ -1204,18 +1487,19 @@ $("btnEvalReset").addEventListener("click", ()=>{
 
   resetDetail();
   resetEvalForm();
+  updateWeightSumUI();
+
   setStatus("statusVerify","warn","Seleziona un fornitore e carica le valutazioni.");
   setStatus("statusEval","warn","Seleziona un fornitore per abilitare l’invio.");
 })();
 </script>
-
 
 <script>
 (function(){
   const u = new URL(location.href);
   if (!u.searchParams.has("v")) {
     u.searchParams.set("v", String(Date.now()));
-    location.replace(u.toString());
+    history.replaceState(null, "", u.toString()); // niente reload
   }
 })();
 </script>
@@ -1223,7 +1507,7 @@ $("btnEvalReset").addEventListener("click", ()=>{
 
 <footer class="footer-release">
   <div class="release-pill">
-    <span>Supplier Quality · v1.0.5</span>
+    <span>Supplier Quality · v2.0.0</span>
     <span class="sep">•</span>
 
     <span class="release-links">
@@ -1243,10 +1527,5 @@ $("btnEvalReset").addEventListener("click", ()=>{
   </div>
 </footer>
 
-
 </body>
 </html>
-
-
-
-
