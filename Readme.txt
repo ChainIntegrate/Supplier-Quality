@@ -53,8 +53,7 @@ STRUTTURA DELLA CARTELLA
 All’interno della cartella troverai:
 
 - SQ_V1.exe
-- run.bat
-- Supplier-Quality (icona di lancio app)
+- Supplier-Quality.bat (icona di lancio app)
 - README.txt
 - wwwroot\
   - favicon.ico
