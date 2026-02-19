@@ -166,6 +166,10 @@
       border:1px solid rgba(221,227,238,0.95);
       border-radius:14px;
       padding:10px 12px;
+
+      /* PATCH: leggibilità Esito(UI) */
+      white-space: normal;
+      line-height: 1.35;
     }
 
     .status{
@@ -293,8 +297,7 @@
       <div class="pill" id="pillSession"><span class="dot" id="dotSession"></span><span id="txtSession">Server: …</span></div>
       <div class="pill" id="pillWallet"><span class="dot ok" id="dotWallet"></span><span id="txtWallet">Archivio: data/*.json</span></div>
       <button class="btn secondary" id="btnShutdown" type="button">Chiudi</button>
-<button class="btn secondary" id="btnRefresh" type="button">Aggiorna</button>
-
+      <button class="btn secondary" id="btnRefresh" type="button">Aggiorna</button>
     </nav>
   </div>
 </header>
@@ -1213,10 +1216,64 @@ async function verifySupplier(){
   currentSupplier = suppliers.find(x => x.id === supplierId) || null;
   currentSupplierId = supplierId;
 
+  // preview base (prima del fetch)
   $("outUiMatch").textContent = currentSupplier ? `${currentSupplier.name} — ${currentSupplier.id}` : supplierId;
 
   await loadEvaluationsForSupplier(supplierId);
   renderDetailAndEvals();
+
+  // PATCH: Esito(UI) = ultimo punteggio + stato + freccina delta (vs periodo precedente)
+  try{
+    const s = currentSupplier;
+    const ordered = sortEvaluationsByPeriodAsc(currentEvals || []);
+    const weights = getSupplierWeights(s);
+
+    if (!ordered.length){
+      $("outUiMatch").innerHTML =
+        `<div style="font-weight:900;">${esc(s?.name || "Fornitore")}</div>` +
+        `<div style="opacity:.85;">Nessuna valutazione registrata.</div>`;
+    } else {
+      const latest = ordered[ordered.length - 1];
+      const latestScore = calcOverall1000(latest.scores, weights);
+
+      let prevScore = null;
+      let deltaPart = "";
+      let trendText = "";
+
+      if (ordered.length >= 2){
+        const prev = ordered[ordered.length - 2];
+        prevScore = calcOverall1000(prev.scores, weights);
+        const delta = latestScore - prevScore;
+
+        deltaPart = `<span style="margin-left:10px;">${deltaHtml(delta)}</span>`;
+        trendText = trendFromDelta(delta);
+      } else {
+        trendText = " (primo periodo)";
+      }
+
+      const statusText = statusBaseFromScore(latestScore) + trendText;
+
+      const scoreLine = (prevScore === null)
+        ? `<span style="margin-left:6px;">${esc(latestScore)}</span>`
+        : `<span style="margin-left:6px;">${esc(prevScore)} → ${esc(latestScore)}</span>${deltaPart}`;
+
+      $("outUiMatch").innerHTML =
+        `<div style="display:flex; justify-content:space-between; gap:10px; align-items:baseline; flex-wrap:wrap;">
+           <div style="font-weight:900;">${esc(s?.name || "Fornitore")}</div>
+           <div style="opacity:.9;">Ultimo: ${esc(periodToLabel(latest.period))}</div>
+         </div>` +
+        `<div style="margin-top:6px;">
+           <span style="font-weight:900;">Punteggio:</span>
+           ${scoreLine}
+         </div>` +
+        `<div style="margin-top:4px;">
+           <span style="font-weight:900;">Stato:</span>
+           <span style="margin-left:6px;">${esc(statusText)}</span>
+         </div>`;
+    }
+  }catch{
+    // non bloccare la UI se qualcosa va storto
+  }
 
   $("selEvalSupplier").value = supplierId;
   $("btnAddEvaluation").disabled = false;
@@ -1250,8 +1307,6 @@ async function saveMethod(){
   const m = methodsById[savedId] || null;
   setMethodForm(m);
 
-  // refresh suppliers dropdown, perché la lista metodi è cambiata
-  // (loadMethods già l'ha fatto, ma qui assicuriamo anche la coerenza con eventuale selezione fornitore)
   if (currentSupplierId){
     const s = suppliers.find(x => x.id === currentSupplierId) || null;
     if (s) setSupplierForm(s);
@@ -1324,18 +1379,13 @@ async function shutdownApp(){
   if (!ok) return;
 
   try{
-    // chiamata shutdown
     await apiPost("/api/shutdown", {});
   }catch(e){
-    // anche se fallisce, proviamo a chiudere la finestra
-    // (ma mostriamo un messaggio)
     alert("Non riesco a chiudere il server: " + (e?.message || String(e)));
   }
 
-  // prova a chiudere la window (in modalità --app di Edge funziona quasi sempre)
   try{ window.close(); }catch{}
 
-  // fallback: schermata neutra (se window.close è bloccato)
   try{
     document.body.innerHTML =
       '<div style="font-family:Montserrat,system-ui; padding:28px; color:#546576;">' +
@@ -1344,9 +1394,6 @@ async function shutdownApp(){
       '</div>';
   }catch{}
 }
-
-
-
 
 /* =========================
    Wire events
@@ -1360,7 +1407,6 @@ $("btnRefresh").addEventListener("click", async ()=>{
 $("btnShutdown").addEventListener("click", async ()=>{
   await shutdownApp();
 });
-
 
 $("btnLoadSupplierList").addEventListener("click", async ()=>{
   try{
@@ -1504,10 +1550,9 @@ $("selMethod").addEventListener("change", ()=>{
 })();
 </script>
 
-
 <footer class="footer-release">
   <div class="release-pill">
-    <span>Supplier Quality · v2.0.0</span>
+    <span>Supplier Quality · v2.1.0</span>
     <span class="sep">•</span>
 
     <span class="release-links">
