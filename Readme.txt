@@ -83,7 +83,7 @@ STRUTTURA DELLA CARTELLA
 
 All’interno della cartella troverai:
 
-SQ_V2.exe
+SQ_V3.exe
 Supplier-Quality.exe
 run.bat
 stop.bat
