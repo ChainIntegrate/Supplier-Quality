@@ -101,9 +101,11 @@ data\
 develop\
   Program.cs
   ProgramV2.0.0.cs
+  ProgramV3.0.0.cs
 
 asset\
   icona.ico
+  logo.png
 
 ------------------------------------------------------------
 FILE CREATI AUTOMATICAMENTE ALL’AVVIO
