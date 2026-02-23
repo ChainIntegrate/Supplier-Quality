@@ -166,8 +166,6 @@
       border:1px solid rgba(221,227,238,0.95);
       border-radius:14px;
       padding:10px 12px;
-
-      /* PATCH: leggibilità Esito(UI) */
       white-space: normal;
       line-height: 1.35;
     }
@@ -380,9 +378,30 @@
           </select>
         </div>
 
+        <div class="row">
+          <div class="field">
+            <label>Limite valutazioni (semestrali)</label>
+            <input id="inEvalLimit" type="number" min="1" max="50" step="1" value="10"
+                   placeholder="Es. 10 (consigliato)" />
+          </div>
+          <div class="field">
+            <label>Info</label>
+            <input id="inLimitHint" value="Carica le ultime N valutazioni (ordine cronologico)" disabled />
+          </div>
+        </div>
+
+        <div class="actions" style="margin-top:-4px;">
+          <button class="btn secondary" id="btnLimit5" type="button">5</button>
+          <button class="btn secondary" id="btnLimit10" type="button">10</button>
+          <button class="btn secondary" id="btnLimit15" type="button">15</button>
+          <button class="btn secondary" id="btnLimit20" type="button">20</button>
+          <button class="btn secondary" id="btnLimitAll" type="button">Tutte</button>
+        </div>
+
         <div class="actions">
           <button class="btn secondary" id="btnLoadSupplierList" type="button">Carica fornitori</button>
           <button class="btn primary" id="btnVerify" type="button" disabled>Carica valutazioni</button>
+          <button class="btn secondary" id="btnReportPdf" type="button" disabled>Stampa PDF</button>
         </div>
 
         <div class="status" id="statusVerify">In attesa.</div>
@@ -730,7 +749,6 @@ function getSupplierWeights(supplier){
     reactivity: Number(m.weights.reactivity)
   };
 
-  // se per qualche motivo i dati sono corrotti, fallback
   const v = validateWeightsStrict({
     punctuality: clampInt(w.punctuality,0,100),
     quality: clampInt(w.quality,0,100),
@@ -798,6 +816,14 @@ function sortEvaluationsByPeriodAsc(arr){
   });
 }
 
+/* limit: default 10, max “sensato” 50 (25 anni semestrali) */
+function getEvalLimit(){
+  const raw = $("inEvalLimit").value;
+  const v = Number(raw);
+  if (!Number.isFinite(v)) return 10;
+  return Math.min(50, Math.max(1, Math.round(v)));
+}
+
 function setEvalMode(isEdit, supplierId, period){
   evalEditMode = !!isEdit;
   evalEditSupplierId = supplierId || "";
@@ -855,7 +881,6 @@ function fillSupplierSelects(){
 }
 
 function fillMethodSelects(){
-  // gestione metodi
   const selM = $("selMethod");
   selM.innerHTML = "";
   const o0 = document.createElement("option");
@@ -870,7 +895,6 @@ function fillMethodSelects(){
     selM.appendChild(opt);
   }
 
-  // dropdown metodo sul fornitore
   const selSM = $("selSupplierMethod");
   selSM.innerHTML = "";
   const d0 = document.createElement("option");
@@ -894,7 +918,6 @@ function setSupplierForm(s){
   $("inSupplierRef").value = s?.ref || "";
   $("inSupplierNotes").value = s?.notes || "";
 
-  // metodo assegnato
   const mid = String(s?.methodId || "");
   $("selSupplierMethod").value = mid;
   const m = mid ? methodsById[mid] : null;
@@ -1006,7 +1029,7 @@ function renderDetailAndEvals(){
   addRow("Metodo verifica", m ? m.name : "(Default)");
   addRow("Pesi (metodo)", `P=${weights.punctuality}% • Q=${weights.quality}% • D=${weights.documentation}% • R=${weights.reactivity}%`);
 
-  addRow("N. valutazioni", ordered.length);
+  addRow("N. valutazioni (caricate)", ordered.length);
 
   if (ordered.length){
     const latest = ordered[ordered.length - 1];
@@ -1015,7 +1038,7 @@ function renderDetailAndEvals(){
 
     const overalls = ordered.map(e => calcOverall1000(e.scores, weights));
     const avgOverall = Math.round(overalls.reduce((a,b)=>a+b,0) / overalls.length);
-    addRow("Media (tutti i periodi)", avgOverall);
+    addRow("Media (periodi caricati)", avgOverall);
 
     if (ordered.length >= 2){
       const prev = ordered[ordered.length - 2];
@@ -1028,7 +1051,7 @@ function renderDetailAndEvals(){
   } else {
     addRow("Periodo più recente", "—");
     addRow("Punteggio (periodo)", "—");
-    addRow("Media (tutti i periodi)", "—");
+    addRow("Media (periodi caricati)", "—");
     addRow("Stato", "N/D");
   }
 
@@ -1038,7 +1061,6 @@ function renderDetailAndEvals(){
     return;
   }
 
-  // Lista valutazioni
   const wrap = document.createElement("div");
   wrap.style.display = "grid";
   wrap.style.gap = "10px";
@@ -1078,7 +1100,6 @@ function renderDetailAndEvals(){
   $("outEvaluations").innerHTML = "";
   $("outEvaluations").appendChild(wrap);
 
-  // Cambiamenti
   if (ordered.length < 2){
     $("outChanges").textContent = "Solo un periodo: nessun confronto disponibile.";
     return;
@@ -1150,8 +1171,8 @@ function renderDetailAndEvals(){
    ========================= */
 async function refreshStatus(){
   try{
-    await apiGet("/api/status");
-    setPill("dotSession","txtSession","ok","Server: OK");
+    const data = await apiGet("/api/status");
+    setPill("dotSession","txtSession","ok",`Server: OK (${data.version || "?"})`);
   }catch{
     setPill("dotSession","txtSession","err","Server: NO");
   }
@@ -1178,10 +1199,16 @@ async function loadSuppliers(){
 
 async function loadEvaluationsForSupplier(supplierId){
   if (!supplierId) throw new Error("Seleziona un fornitore");
-  setStatus("statusVerify","warn","Carico valutazioni…");
-  const data = await apiGet("/api/evaluations?supplierId=" + encodeURIComponent(supplierId));
+
+  const limit = getEvalLimit();
+  if (!limit || limit < 1) throw new Error("Inserisci un limite valido.");
+
+  setStatus("statusVerify","warn",`Carico valutazioni (ultime ${limit})…`);
+
+  const data = await apiGet("/api/evaluations?supplierId=" + encodeURIComponent(supplierId) + "&limit=" + encodeURIComponent(limit));
   currentEvals = Array.isArray(data.evaluations) ? data.evaluations : [];
-  setStatus("statusVerify","ok","Valutazioni caricate: " + currentEvals.length);
+
+  setStatus("statusVerify","ok",`Valutazioni caricate: ${currentEvals.length} (limit ${data.limit || limit})`);
 }
 
 /* =========================
@@ -1216,13 +1243,12 @@ async function verifySupplier(){
   currentSupplier = suppliers.find(x => x.id === supplierId) || null;
   currentSupplierId = supplierId;
 
-  // preview base (prima del fetch)
   $("outUiMatch").textContent = currentSupplier ? `${currentSupplier.name} — ${currentSupplier.id}` : supplierId;
 
   await loadEvaluationsForSupplier(supplierId);
   renderDetailAndEvals();
 
-  // PATCH: Esito(UI) = ultimo punteggio + stato + freccina delta (vs periodo precedente)
+  // Esito(UI) = ultimo punteggio + stato + freccina delta
   try{
     const s = currentSupplier;
     const ordered = sortEvaluationsByPeriodAsc(currentEvals || []);
@@ -1271,13 +1297,13 @@ async function verifySupplier(){
            <span style="margin-left:6px;">${esc(statusText)}</span>
          </div>`;
     }
-  }catch{
-    // non bloccare la UI se qualcosa va storto
-  }
+  }catch{}
 
   $("selEvalSupplier").value = supplierId;
   $("btnAddEvaluation").disabled = false;
   $("btnEvalReset").disabled = true;
+
+  $("btnReportPdf").disabled = false;
 }
 
 async function saveMethod(){
@@ -1336,7 +1362,7 @@ async function addOrEditEvaluation(){
 
   const note = String($("inEvalNote").value || "").trim() || null;
 
-  // --- CORREZIONE ---
+  // CORREZIONE
   if (evalEditMode){
     if (supplierId !== evalEditSupplierId || period !== evalEditPeriod){
       throw new Error("Mismatch correzione: rientra in modalità Correggi dal periodo giusto.");
@@ -1360,7 +1386,7 @@ async function addOrEditEvaluation(){
     return;
   }
 
-  // --- INSERIMENTO (con blocco se già esiste) ---
+  // INSERIMENTO (blocco se già esiste)
   if ($("selVerify").value.trim() === supplierId && evalExistsLocal(supplierId, period)){
     throw new Error(`Esiste già una valutazione per il periodo ${period}. Usa “Correggi” dalla lista.`);
   }
@@ -1393,6 +1419,34 @@ async function shutdownApp(){
       '<div>Puoi chiudere questa finestra.</div>' +
       '</div>';
   }catch{}
+}
+
+/* =========================
+   PDF (report)
+   ========================= */
+async function openReportPdf(){
+  const supplierId = $("selVerify").value.trim();
+  if (!supplierId) throw new Error("Seleziona un fornitore");
+
+  const limit = getEvalLimit();
+  setStatus("statusVerify","warn",`Genero report PDF (ultime ${limit})…`);
+
+  const res = await fetch(API_BASE + "/api/report?supplierId=" + encodeURIComponent(supplierId) + "&limit=" + encodeURIComponent(limit), {
+    method: "GET",
+    cache: "no-store"
+  });
+
+  if (!res.ok){
+    const t = await res.text().catch(()=> "");
+    throw new Error("Errore PDF: HTTP " + res.status + (t ? (" — " + t) : ""));
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener,noreferrer");
+  setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch{} }, 60_000);
+
+  setStatus("statusVerify","ok","Report PDF pronto.");
 }
 
 /* =========================
@@ -1452,6 +1506,7 @@ $("btnSelectForVerify").addEventListener("click", ()=>{
   if (!id) return;
   $("selVerify").value = id;
   $("btnVerify").disabled = false;
+  $("btnReportPdf").disabled = true;
   setStatus("statusVerify","warn","Selezionato. Premi “Carica valutazioni”.");
 });
 
@@ -1463,8 +1518,22 @@ $("btnVerify").addEventListener("click", async ()=>{
 $("selVerify").addEventListener("change", ()=>{
   const id = $("selVerify").value.trim();
   $("btnVerify").disabled = !id;
+  $("btnReportPdf").disabled = true;
   $("outUiMatch").textContent = "—";
   resetDetail();
+});
+
+/* quick limit presets (NO auto-reload) */
+function setLimitValue(n){ $("inEvalLimit").value = String(n); }
+$("btnLimit5").addEventListener("click", ()=> setLimitValue(5));
+$("btnLimit10").addEventListener("click", ()=> setLimitValue(10));
+$("btnLimit15").addEventListener("click", ()=> setLimitValue(15));
+$("btnLimit20").addEventListener("click", ()=> setLimitValue(20));
+$("btnLimitAll").addEventListener("click", ()=> setLimitValue(50));
+
+$("btnReportPdf").addEventListener("click", async ()=>{
+  try{ await openReportPdf(); }
+  catch(e){ setStatus("statusVerify","err", e?.message || String(e)); }
 });
 
 $("selEvalSupplier").addEventListener("change", ()=>{
@@ -1489,7 +1558,6 @@ $("btnEvalReset").addEventListener("click", ()=>{
   setStatus("statusEval","warn","Modifica annullata.");
 });
 
-// metodi: live sum + blocco salvataggio
 ["inW_P","inW_Q","inW_D","inW_R"].forEach(id=>{
   $(id).addEventListener("input", ()=>{ updateWeightSumUI(); });
 });
@@ -1545,14 +1613,14 @@ $("selMethod").addEventListener("change", ()=>{
   const u = new URL(location.href);
   if (!u.searchParams.has("v")) {
     u.searchParams.set("v", String(Date.now()));
-    history.replaceState(null, "", u.toString()); // niente reload
+    history.replaceState(null, "", u.toString());
   }
 })();
 </script>
 
 <footer class="footer-release">
   <div class="release-pill">
-    <span>Supplier Quality · v2.1.0</span>
+    <span>Supplier Quality · v3.0.0</span>
     <span class="sep">•</span>
 
     <span class="release-links">
